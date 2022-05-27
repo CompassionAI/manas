@@ -1,10 +1,10 @@
-md5: d3a7524e8ece6509ba59dc6c78e0c942
+md5: 37998e1c538b9827397a607643f028f2
 frozen: true
 deps:
 - path: processed_datasets/kangyur-tengyur-bert-like-marker-docs
   repo:
     url: git@github.com:CompassionAI/data-registry.git
-    rev_lock: 84f07301f4bc258083d777dc2f1525625a349613
+    rev_lock: 34da4c3c23ae1a275369d2608cc67d99096534f8
 outs:
 - md5: 357d9d9dbfcee164c681f4c8d3f420d0.dir
   size: 905006767
