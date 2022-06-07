@@ -10,10 +10,14 @@ VOCAB_FILES_NAMES = {"vocab_file": "spm_model.model"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
-        "tibert-bpe-tiny": os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_tiny/spm_model.model"),
-        "tibert-bpe-small": os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_small/spm_model.model"),
-        "tibert-bpe-large": os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_big/spm_model.model"),
-        "tibert-unigram-large": os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_unigram_big/spm_model.model")
+        "tibert-bpe-tiny":
+            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_tiny/spm_model.model"),
+        "tibert-bpe-small":
+            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_small/spm_model.model"),
+        "tibert-bpe-large":
+            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_big/spm_model.model"),
+        "tibert-unigram-large":
+            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_unigram_big/spm_model.model")
     }
 }
 
