@@ -1,4 +1,5 @@
 import os
+import glob
 
 def get_local_ckpt(model_name):
     """Convert the name of the model in the CAI data registry to a local checkpoint path.
@@ -9,6 +10,9 @@ def get_local_ckpt(model_name):
             within the data registry. Otherwise, it is assumed to be a champion model inside the champion_models
             directory.
 
+            If model name has no extension, it checks if there is only one .bin file in the path the model name resolves
+            to. If there is more than one, it crashes, otherwise it returns the path to this .bin file.
+
     Returns:
         The local directory name you can feed to AutoModel.from_pretrained.
     """
@@ -16,4 +20,13 @@ def get_local_ckpt(model_name):
     data_base_path = os.environ['CAI_DATA_BASE_PATH']
     if not model_name.startswith('model_archive'):
         model_name = os.path.join('champion_models', model_name)
-    return os.path.join(data_base_path, model_name)
+    model_name = os.path.join(data_base_path, model_name)
+    if not '.' in model_name:
+        candidates = glob.glob(os.path.join(model_name, "*.bin"))
+        if len(candidates) == 0:
+            raise FileNotFoundError(f"No .bin files found in {model_name}")
+        if len(candidates) > 1:
+            raise FileExistsError(f"Multiple .bin files in {model_name}, please specify which one to load by appending"
+                                   "the .bin filename to the model name")
+        model_name = candidates[0]
+    return model_name
