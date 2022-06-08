@@ -10,7 +10,7 @@ class CAITokenizerMixin:
                 The Transformers model name.
         
         Returns:
-            The local directory name you can feed to TibertTokenizer.from_pretrained.
+            The local directory name you can feed to AutoTokenizer.from_pretrained.
         """
 
         if model_name not in cls.pretrained_vocab_files_map['vocab_file']:
