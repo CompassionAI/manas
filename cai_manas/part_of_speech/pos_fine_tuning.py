@@ -1,3 +1,22 @@
+# Sample run:
+# ===
+# python -m cai_manas.part_of_speech.pos_fine_tuning \
+#     --tibert_pytorch_ckpt tibert-albert/base.bin \
+#     --output_dir ~/workspace/temp/pos-tagger \
+#     --train_dataset_name part-of-speech-intrasyllabic-words \
+#     --do_train \
+#     --use_mask_for_word_pieces \
+#     --per_device_train_batch_size 8 \
+#     --per_device_eval_batch_size 8 \
+#     --gradient_accumulation_steps 4 \
+#     --learning_rate 5e-5 \
+#     --num_train_epochs 20 \
+#     --logging_steps 10 \
+#     --save_steps 50 \
+#     --save_total_limit 50 \
+#     --log_level debug \
+#     --evaluation_strategy steps
+
 import os
 import sys
 import pickle
@@ -25,28 +44,6 @@ from transformers import (
     set_seed)
 
 logger = logging.getLogger(__name__)
-
-# Sample run:
-# ===
-# rm -rf c:/workspace/tibert_data/training/models/pos-tagger/*
-# mkdir c:\workspace\tibert_data\training\models\pos-tagger\tensorboard
-# python -m cai_manas.part_of_speech.pos_fine_tuning \
-#     --tibert_pytorch_ckpt c:/workspace/tibert_data/training/models/tibert-champion/946000.bin \
-#     --output_dir c:/workspace/tibert_data/training/models/pos-tagger \
-#     --train_dataset_name part-of-speech-intrasyllabic-words
-#     --do_train \
-#     --use_mask_for_word_pieces \
-#     --per_device_train_batch_size 8 \
-#     --per_device_eval_batch_size 8 \
-#     --gradient_accumulation_steps 4 \
-#     --learning_rate 5e-5 \
-#     --num_train_epochs 20 \
-#     --logging_dir c:/workspace/tibert_data/training/models/pos-tagger/tensorboard \
-#     --logging_steps 10 \
-#     --eval_steps 50 \
-#     --save_steps 50 \
-#     --save_total_limit 50
-#     --log_level debug
 
 
 @dataclass
