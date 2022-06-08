@@ -43,7 +43,9 @@ if __name__ == "__main__":
     print("Interactive Tibetan part-of-speech tagging...")
     while True:
         print("===")
-        bo_text = input("Tibetan: ")
+        bo_text = input("Tibetan (or type exit): ")
+        if bo_text == "exit":
+            break
         res = tagger.tag(bo_text)
         for word, tag in zip(res["words"], res["tags"]):
             print(word, tag)
