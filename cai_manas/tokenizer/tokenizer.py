@@ -4,6 +4,8 @@ import unicodedata
 from transformers import AlbertTokenizer
 import sentencepiece as spm
 
+from .cai_tokenizer_mixin import CAITokenizerMixin
+
 DATA_BASE_PATH = os.environ['CAI_DATA_BASE_PATH']
 
 VOCAB_FILES_NAMES = {"vocab_file": "spm_model.model"}
@@ -31,7 +33,7 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
 SPIECE_UNDERLINE = "▁"
 
 
-class TibertTokenizer(AlbertTokenizer):
+class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
     """Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
     <https://github.com/google/sentencepiece>`__
 
@@ -140,23 +142,6 @@ class TibertTokenizer(AlbertTokenizer):
             mask_token=mask_token,
             **kwargs)
         self.keep_accents = True
-
-    @staticmethod
-    def get_local_model_dir(model_name):
-        """Get the model local directory name in the CAI data registry from the Transformers model name.
-
-        Args:
-            model_name (:obj:`string`):
-                The Transformers model name.
-        
-        Returns:
-            The local directory name you can feed to TibertTokenizer.from_pretrained.
-        """
-
-        if model_name not in PRETRAINED_VOCAB_FILES_MAP['vocab_file']:
-            valid_names = ', '.join(PRETRAINED_VOCAB_FILES_MAP['vocab_file'].keys())
-            raise KeyError(f"Unknown TibertTokenizer model name {model_name}. Valid names are: {valid_names}")
-        return os.path.dirname(PRETRAINED_VOCAB_FILES_MAP['vocab_file'][model_name])
 
     @staticmethod
     def train(training_data_glob,
