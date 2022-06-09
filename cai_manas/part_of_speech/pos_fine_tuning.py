@@ -1,7 +1,7 @@
 # Sample run:
 # ===
 # python -m cai_manas.part_of_speech.pos_fine_tuning \
-#     --tibert_pytorch_ckpt tibert-albert/base.bin \
+#     --tibert_pytorch_ckpt albert-olive-cormorant/base.bin \
 #     --output_dir ~/workspace/temp/pos-tagger \
 #     --train_dataset_name part-of-speech-intrasyllabic-words \
 #     --do_train \
