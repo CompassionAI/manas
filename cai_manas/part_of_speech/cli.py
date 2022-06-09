@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tokenizer_name",
         type=str,
-        default='tibert-bpe-large',
+        default='olive-large',
         help="Tokenizer name")
     parser.add_argument(
         "--model_cfg_name",

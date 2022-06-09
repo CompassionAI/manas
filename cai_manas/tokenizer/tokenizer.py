@@ -12,21 +12,19 @@ VOCAB_FILES_NAMES = {"vocab_file": "spm_model.model"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
-        "tibert-bpe-tiny":
-            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_tiny/spm_model.model"),
-        "tibert-bpe-small":
-            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_small/spm_model.model"),
-        "tibert-bpe-large":
-            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_bpe_big/spm_model.model"),
-        "tibert-unigram-large":
-            os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers/tibert_spm_unigram_big/spm_model.model")
+        "olive-tiny":
+            os.path.join(DATA_BASE_PATH, "champion_models/tokenizer-olive/olive_tiny/spm_model.model"),
+        "olive-small":
+            os.path.join(DATA_BASE_PATH, "champion_models/tokenizer-olive/olive_small/spm_model.model"),
+        "olive-large":
+            os.path.join(DATA_BASE_PATH, "champion_models/tokenizer-olive/olive_big/spm_model.model"),
     }
 }
 
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
-    "tibert-bpe-tiny": 512,
-    "tibert-bpe-small": 512,
-    "tibert-bpe-large": 512,
+    "olive-tiny": 512,
+    "olive-small": 512,
+    "olive-large": 512,
     "tibert-unigram-large": 512
 }
 
@@ -259,23 +257,23 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
 
 
 if __name__ == "__main__":
-    training_data = os.path.join(DATA_BASE_PATH, "processed_datasets/spm-tokenizer-training/spm_train.txt")
-    spm_tokenizers = os.path.join(DATA_BASE_PATH, "champion_models/spm-tokenizers")
+    training_data = os.path.join(DATA_BASE_PATH, "processed_datasets/dictionary-tokenizer-training/spm_train.txt")
+    spm_tokenizers = os.path.join(DATA_BASE_PATH, "champion_models/tokenizer-olive")
 
     TibertTokenizer.train(
         training_data,
-        os.path.join(spm_tokenizers, 'tibert_spm_bpe_tiny'),
+        os.path.join(spm_tokenizers, 'olive_tiny'),
         model_type='bpe',
         vocab_size=1000)
 
     TibertTokenizer.train(
         training_data,
-        os.path.join(spm_tokenizers, 'tibert_spm_bpe_small'),
+        os.path.join(spm_tokenizers, 'olive_small'),
         model_type='bpe',
         vocab_size=5000)
 
     TibertTokenizer.train(
         training_data,
-        os.path.join(spm_tokenizers, 'tibert_spm_bpe_big'),
+        os.path.join(spm_tokenizers, 'olive_big'),
         model_type='bpe',
         vocab_size=10000)

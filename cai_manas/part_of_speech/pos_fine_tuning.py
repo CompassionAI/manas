@@ -55,7 +55,7 @@ class ModelArguments:
     config_name: Optional[str] = field(
         default="albert-base-v2", metadata={"help": "Pretrained config name"})
     tokenizer_name: Optional[str] = field(
-        default="tibert-bpe-large",
+        default="olive-large",
         metadata={"help": "Pretrained tokenizer name"})
 
 

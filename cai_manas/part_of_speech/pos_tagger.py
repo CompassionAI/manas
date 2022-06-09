@@ -30,7 +30,7 @@ class PartOfSpeechTagger:
         """Loads all the relevant data and models for part-of-speech tagging.
 
         Args:
-            tokenizer_name: Name of the tokenizer to load from the data registry. For example, tibert-bpe-large.
+            tokenizer_name: Name of the tokenizer to load from the data registry. For example, olive-large.
             config_name: Name of the Huggingface config of the fine-tuned monolingual transformer. For example,
                 albert-base-v2.
             model_ckpt: Name of the fine-tuned model checkpoint in the data registry to use for part-of-speech tagging.
