@@ -3,7 +3,7 @@
 # python -m cai_manas.part_of_speech.pos_fine_tuning \
 #     --tibert_pytorch_ckpt albert-olive-cormorant/base.bin \
 #     --output_dir ~/workspace/temp/pos-tagger \
-#     --train_dataset_name part-of-speech-intrasyllabic-words \
+#     --train_dataset_name part-of-speech-intrasyllabic-olive \
 #     --do_train \
 #     --use_mask_for_word_pieces \
 #     --per_device_train_batch_size 8 \
