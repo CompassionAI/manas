@@ -1,0 +1,6 @@
+defaults:
+ - default
+
+# See default config for documentation
+train_dataset_name: part-of-speech-intersyllabic-olive
+use_mask_for_word_pieces: True

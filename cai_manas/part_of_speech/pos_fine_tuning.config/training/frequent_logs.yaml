@@ -1,0 +1,15 @@
+defaults:
+  - huggingface_training_args
+
+output_dir: ~/workspace/temp/pos-tagger
+do_train: True
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 4
+learning_rate: 5e-5
+num_train_epochs: 20
+logging_steps: 10
+save_steps: 50
+save_total_limit: 50
+log_level: debug
+evaluation_strategy: STEPS

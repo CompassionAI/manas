@@ -1,0 +1,4 @@
+defaults:
+  - data: part-of-speech-intrasyllabic-olive
+  - model: albert-olive-cormorant
+  - training: frequent_logs

@@ -1,0 +1,23 @@
+train_dataset_name: ~
+
+test_dataset_name: ~
+
+# When set to False, the first piece of a word in the dataset is marked with its label and the rest of the pieces of
+# that word are marked with the padding token, which is set to the ignored index of the cross-entropy loss by default.
+# When set to True the [MASK] token is used for this instead, which is not ignored by the loss, so that the model has to
+# learn word segmentation and part-of-speech tagging end-to-end.
+use_mask_for_word_pieces: False
+
+# Number of duplicate walks through words in the SOAS dataset to make training examples. Meant to be used in combination
+# with dupe_offset. The actual number of walks will be dupe_count + 1.
+dupe_count: 0
+
+# Offset when duplicating the walking through words in the SOAS dataset to make training examples.
+dupe_offset: 3
+
+# The maximum total input sequence length after tokenization. Sequences longer than this will be truncated, sequences
+# shorter will be padded.
+max_seq_length: 128
+
+# What fraction of the data to put into the test dataset.
+test_frac: 0.1
