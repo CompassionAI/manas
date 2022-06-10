@@ -54,6 +54,7 @@ def compute_metrics(p):
 def main(cfg):
     cfg.training.output_dir = HydraConfig.get().run.dir
     training_cfg = HydraTrainingArguments.as_hf_training_args(cfg.training)
+    training_cfg.logging_dir = os.path.join(cfg.training.output_dir, "tb_logs")
 
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
