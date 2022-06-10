@@ -1,32 +1,12 @@
-# Sample run:
-# ===
-# python -m cai_manas.part_of_speech.pos_fine_tuning \
-#     --tibert_pytorch_ckpt albert-olive-cormorant/base.bin \
-#     --output_dir ~/workspace/temp/pos-tagger \
-#     --train_dataset_name part-of-speech-intrasyllabic-olive \
-#     --do_train \
-#     --use_mask_for_word_pieces \
-#     --per_device_train_batch_size 8 \
-#     --per_device_eval_batch_size 8 \
-#     --gradient_accumulation_steps 4 \
-#     --learning_rate 5e-5 \
-#     --num_train_epochs 20 \
-#     --logging_steps 10 \
-#     --save_steps 50 \
-#     --save_total_limit 50 \
-#     --log_level debug \
-#     --evaluation_strategy steps
-
 import os
 import sys
 import pickle
 import logging
 from tqdm import tqdm
-from dataclasses import dataclass, field
-from typing import Optional
 
 import hydra
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 import numpy as np
 import torch
 from torch.utils.data import random_split
@@ -35,17 +15,11 @@ from sklearn.metrics import precision_recall_fscore_support
 from ..tokenizer import TibertTokenizer
 from ..models.utils import get_local_ckpt
 from cai_common.datasets import TokenTagDataset
+from cai_common.utils.hydra_training_args import HydraTrainingArguments
 
 import transformers
-from transformers import (
-    AutoConfig,
-    AlbertForTokenClassification,
-    HfArgumentParser,
-    Trainer,
-    TrainingArguments,
-    set_seed)
+from transformers import (AutoConfig, AlbertForTokenClassification, Trainer, set_seed)
 
-from cai_common.utils.hydra_training_args import HydraTrainingArguments
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +52,7 @@ def compute_metrics(p):
 
 @hydra.main(version_base="1.2", config_path="./pos_fine_tuning.config", config_name="config")
 def main(cfg):
+    cfg.training.output_dir = HydraConfig.get().run.dir
     training_cfg = HydraTrainingArguments.as_hf_training_args(cfg.training)
 
     logging.basicConfig(
