@@ -3,7 +3,6 @@ import json
 import logging
 from typing import Tuple, Dict, List
 
-import torch
 import numpy as np
 from transformers import (
     AutoConfig,
