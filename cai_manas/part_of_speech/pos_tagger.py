@@ -10,7 +10,7 @@ from transformers import (
     AlbertForTokenClassification)
 
 from ..tokenizer import TibertTokenizer
-from ..models.utils import get_local_ckpt, get_cai_config
+from cai_common.models.utils import get_local_ckpt, get_cai_config
 
 logger = logging.getLogger(__name__)
 
