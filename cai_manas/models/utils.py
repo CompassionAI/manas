@@ -1,5 +1,7 @@
 import os
 import glob
+import json
+
 
 def get_local_ckpt(model_name):
     """Convert the name of the model in the CAI data registry to a local checkpoint path.
@@ -30,3 +32,20 @@ def get_local_ckpt(model_name):
                                    "the .bin filename to the model name")
         model_name = candidates[0]
     return model_name
+
+
+def get_cai_config(model_name):
+    """Load the CompassionAI config for the name of the model in the CAI data registry.
+
+    Args:
+        model_name (:obj:`string`):
+            The model name in the CAI data registry. Follows the same rules as get_local_ckpt.
+
+    Returns:
+        The loaded CompassionAI config JSON.
+    """
+
+    local_ckpt = get_local_ckpt(model_name)
+    cfg_fn = os.path.splitext(local_ckpt)[0] + ".config_cai.json"
+    with open(cfg_fn) as f:
+        return json.load(f)

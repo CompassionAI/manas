@@ -14,10 +14,7 @@ def main(cfg):
         level=logging.INFO,
     )
 
-    tagger = PartOfSpeechTagger(
-        cfg.model.tokenizer_name,
-        cfg.model.model_cfg_name,
-        cfg.model.model_ckpt)
+    tagger = PartOfSpeechTagger(cfg.model.model_ckpt)
 
     print("Interactive Tibetan part-of-speech tagging...")
     while True:

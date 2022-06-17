@@ -1,3 +1,1 @@
-tokenizer_name: olive-large
-model_cfg_name: albert-base-v2
 model_ckpt: part-of-speech-intersyllabic-olive-cormorant

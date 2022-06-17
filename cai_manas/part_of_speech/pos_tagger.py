@@ -10,7 +10,7 @@ from transformers import (
     AlbertForTokenClassification)
 
 from ..tokenizer import TibertTokenizer
-from ..models.utils import get_local_ckpt
+from ..models.utils import get_local_ckpt, get_cai_config
 
 logger = logging.getLogger(__name__)
 
@@ -26,24 +26,31 @@ class PartOfSpeechTagger:
         model: Huggingface fine-tuned model, set to eval mode.
     """
 
-    def __init__(self, tokenizer_name: str, config_name: str, model_ckpt: str) -> None:
+    def __init__(self, model_ckpt: str) -> None:
         """Loads all the relevant data and models for part-of-speech tagging.
 
         Args:
-            tokenizer_name: Name of the tokenizer to load from the data registry. For example, olive-large.
-            config_name: Name of the Huggingface config of the fine-tuned monolingual transformer. For example,
-                albert-base-v2.
             model_ckpt: Name of the fine-tuned model checkpoint in the data registry to use for part-of-speech tagging.
                 For example, part-of-speech-intrasyllabic-tags.
         """
+
+        local_ckpt = get_local_ckpt(model_ckpt)
+        logger.debug(f"Local model checkpoint {model_ckpt} resolved to {local_ckpt}")
+
+        logger.debug(f"Loading CAI PoS model config")
+        cai_pos_config = get_cai_config(model_ckpt)
+        base_model = cai_pos_config['base_model']
+        logger.debug(f"Base model resolved to {base_model}")
+
+        logger.debug(f"Loading CAI base model config")
+        cai_base_config = get_cai_config(base_model)
+        tokenizer_name = cai_base_config['tokenizer_name']
+        config_name = cai_base_config['hf_base_model_name']
 
         logger.debug(f"Loading tokenizer {tokenizer_name}")
         self.tokenizer = TibertTokenizer.from_pretrained(TibertTokenizer.get_local_model_dir(tokenizer_name))
         self.tokenizer.stochastic_tokenization = False
         self.tokenizer.tsheg_pretokenization = True
-
-        local_ckpt = get_local_ckpt(model_ckpt)
-        logger.debug(f"Local model checkpoint {model_ckpt} resolved to {local_ckpt}")
 
         logger.debug(f"Loading model config.json")
         config_json_fn = os.path.join(os.path.dirname(local_ckpt), "config.json")
