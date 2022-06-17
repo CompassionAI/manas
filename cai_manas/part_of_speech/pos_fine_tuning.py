@@ -13,7 +13,7 @@ from torch.utils.data import random_split
 from sklearn.metrics import precision_recall_fscore_support
 
 from ..tokenizer import TibertTokenizer
-from ..models.utils import get_local_ckpt
+from cai_common.models.utils import get_local_ckpt
 from cai_common.datasets import TokenTagDataset
 from cai_common.utils.hydra_training_args import HydraTrainingArguments
 
