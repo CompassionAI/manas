@@ -87,7 +87,7 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
             there will be no underline. If you're getting bad results for the unmasking of the first token in a section
             then try setting this to True.
         eor_token_id (:obj:`int`, `optional`, defaults to :obj:`-1`):
-            The token ID of the register split token, usually [eor]. The RegisterEncoderModel class splits on these IDs
+            The token ID of the register split token, usually [eor]. The SiameseEncoderModel class splits on these IDs
             during preprocessing in the forward method.
     Attributes:
         sp_model (:obj:`SentencePieceProcessor`):
