@@ -86,6 +86,9 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
             Whether to put the SentencePiece underline only between sections. Note that, if there is only one section,
             there will be no underline. If you're getting bad results for the unmasking of the first token in a section
             then try setting this to True.
+        eor_token_id (:obj:`int`, `optional`, defaults to :obj:`-1`):
+            The token ID of the register split token, usually [eor]. The RegisterEncoderModel class splits on these IDs
+            during preprocessing in the forward method.
     Attributes:
         sp_model (:obj:`SentencePieceProcessor`):
             The `SentencePiece` processor that is used for every conversion (string, tokens and IDs).
@@ -125,6 +128,7 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
                  pad_token='<pad>',
                  cls_token='[CLS]',
                  mask_token='[MASK]',
+                 eor_token='[eor]',
                  **kwargs):
         super().__init__(
             vocab_file,
@@ -139,6 +143,9 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
             cls_token=cls_token,
             mask_token=mask_token,
             **kwargs)
+        self.eor_token = eor_token
+        self.add_tokens(eor_token)
+        self.eor_token_id = self.added_tokens_encoder[eor_token]
         self.keep_accents = True
 
     @staticmethod
