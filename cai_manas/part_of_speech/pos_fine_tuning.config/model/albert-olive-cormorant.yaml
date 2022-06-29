@@ -1,5 +1,5 @@
 # Pretrained PyTorch checkpoint, converted to Huggingface
-tibert_pytorch_ckpt: albert-olive-cormorant/base.bin
+tibert_pytorch_ckpt: albert-olive-cormorant/base/base.bin
 
 # Huggingface config name for the pretrained checkpoint
 config_name: albert-base-v2
