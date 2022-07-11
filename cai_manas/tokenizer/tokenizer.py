@@ -1,10 +1,11 @@
 import os
 import glob
 import unicodedata
-from transformers import AlbertTokenizer
+from transformers import AlbertTokenizer, AlbertTokenizerFast
 import sentencepiece as spm
 
 from .cai_tokenizer_mixin import CAITokenizerMixin
+
 
 DATA_BASE_PATH = os.environ['CAI_DATA_BASE_PATH']
 
@@ -31,12 +32,60 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
 SPIECE_UNDERLINE = "▁"
 
 
-class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
-    """Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
-    <https://github.com/google/sentencepiece>`__
+def _tokenize_shim(self, super, text, **kwargs):
+    # The AlBERT tokenizer deliberately splits on the control tokens in the text to introduce white space between
+    #   them. So [MASK]de dmar ro/ becomes ['[MASK]', '_de', 'dmar', 'ra', 'o', '/']. This doesn't work for
+    #   Tibetan, we want it to be ['_', '[MASK]', 'de', 'dmar', 'ra', 'o', '/'] otherwise we have a huge mismatch
+    #   between the training and test. So we replace the control tokens with non-Tibetan special text, tokenize as
+    #   per AlBERT, then replace the special text with the control tokens back. Everything then flows correctly
+    #   through the rest of the AlBERT tokenizer.
+    #
+    # We also introduce the option to only add the underline between sections. This can improve performance on
+    #   unmasking short sentences. Likely this is happening because of a mismatch between the training and test
+    #   data, which means the short sentence part of the BERT pre-training data generator is actually important.
+    #   In Tibetan there is no obvious way to do this without a sentence segmentation model, so we leave this as is
+    #   until we are able to make a reliable sentence segmenter as part of the part-of-speech tagging experiments.
+    #   When we have a reliable segmenter we can augment the training set with short individual sentences that have
+    #   the proper SentencePiece underscores in front of them and polish the transformer model.
+    if ' ' in text and self.underline_between_sections:
+        sections = [self.tokenize(section, **kwargs) for section in text.split(' ')]
+        res = []
+        for section in sections + [[]]:
+            if len(section) > 0:
+                res.extend(section + [SPIECE_UNDERLINE])
+        if len(res) > 0:
+            res = res[:-1]  # Remove the final SentencePiece underline
+        return res
+    if self.tsheg_pretokenization:
+        for mark in self.intersyllabic_marks:
+            # Break up the intersyllabic marks with a non-Tibetan token. This will force SentencePiece's BPE to
+            #   not join across the out-of-vocabulary token.
+            text = text.replace(mark, mark + 'a')
+    special_token_map = dict(
+        [(str(idx), control_token) for idx, control_token in enumerate(list(self.unique_no_split_tokens))])
+    for replacement, control_token in special_token_map.items():
+        text = text.replace(control_token, replacement)
+    res = [
+        special_token_map[token] if token in special_token_map else token
+        for token in super.tokenize(text, **kwargs)]
+    if self.underline_between_sections:
+        final_res = []
+        for token in res:
+            if token == SPIECE_UNDERLINE:
+                continue
+            if token[0] == SPIECE_UNDERLINE:
+                token = token[1:]
+            final_res.append(token)
+    else:
+        final_res = res
+    if self.tsheg_pretokenization:
+        # Now remove the non-Tibetan tokens to get a strictly intersyllabic tokenization.
+        final_res = [token for token in final_res if not token == 'a']
+    return final_res
 
-    This tokenizer inherits from :class:`~transformers.PreTrainedTokenizer` which contains most of the methods. Users
-    should refer to the superclass for more information regarding methods.
+
+class TibertTokenizerBaseMixin:
+    _args_docstring = """
     Args:
         vocab_file (:obj:`string`):
             `SentencePiece <https://github.com/google/sentencepiece>`__ file (generally has a .spm extension) that
@@ -89,14 +138,12 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
         eor_token_id (:obj:`int`, `optional`, defaults to :obj:`-1`):
             The token ID of the register split token, usually [eor]. The SiameseEncoderModel class splits on these IDs
             during preprocessing in the forward method.
-    Attributes:
-        sp_model (:obj:`SentencePieceProcessor`):
-            The `SentencePiece` processor that is used for every conversion (string, tokens and IDs).
     """
 
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
     max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
+
     intersyllabic_marks = [unicodedata.lookup(c) for c in [
         'TIBETAN MARK INITIAL YIG MGO MDUN MA',
         'TIBETAN MARK CLOSING YIG MGO SGAB MA',
@@ -116,37 +163,12 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
     tsheg_pretokenization = False
     underline_between_sections = False
 
-    def __init__(self,
-                 vocab_file,
-                 do_lower_case=True,
-                 remove_space=True,
-                 keep_accents=False,
-                 bos_token='[CLS]',
-                 eos_token='[SEP]',
-                 unk_token='<unk>',
-                 sep_token='[SEP]',
-                 pad_token='<pad>',
-                 cls_token='[CLS]',
-                 mask_token='[MASK]',
-                 eor_token='[eor]',
-                 **kwargs):
-        super().__init__(
-            vocab_file,
-            do_lower_case=do_lower_case,
-            remove_space=remove_space,
-            keep_accents=keep_accents,
-            bos_token=bos_token,
-            eos_token=eos_token,
-            unk_token=unk_token,
-            sep_token=sep_token,
-            pad_token=pad_token,
-            cls_token=cls_token,
-            mask_token=mask_token,
-            **kwargs)
+    def __init__(self, eor_token='[eor]'):
         self.eor_token = eor_token
         self.add_tokens(eor_token)
-        self.eor_token_id = self.added_tokens_encoder[eor_token]
+        self.eor_token_id = self.convert_tokens_to_ids(eor_token)
         self.keep_accents = True
+
 
     @staticmethod
     def train(training_data_glob,
@@ -182,6 +204,105 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
             control_symbols="[CLS],[SEP],[MASK]",
             user_defined_symbols="(,),\",-,.,–,£,€")
 
+
+class TibertTokenizerFast(TibertTokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerMixin):
+    f"""Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
+    <https://github.com/google/sentencepiece>`.
+    
+    This version of the tokenizer has the fast SentencePiece implementation from Hugging Face as the backend. It does
+    not support stochastic tokenization.
+
+    This tokenizer inherits from :class:`~transformers.PreTrainedTokenizerFast` which contains most of the methods.
+    Users should refer to the superclass for more information regarding methods.
+
+    {TibertTokenizerBaseMixin._args_docstring}
+    """
+
+    def __init__(self,
+                 vocab_file,
+                 do_lower_case=True,
+                 remove_space=True,
+                 keep_accents=False,
+                 bos_token='[CLS]',
+                 eos_token='[SEP]',
+                 unk_token='<unk>',
+                 sep_token='[SEP]',
+                 pad_token='<pad>',
+                 cls_token='[CLS]',
+                 mask_token='[MASK]',
+                 eor_token='[eor]',
+                 **kwargs):
+        AlbertTokenizerFast.__init__(
+            self,
+            vocab_file=vocab_file,
+            do_lower_case=do_lower_case,
+            remove_space=remove_space,
+            keep_accents=keep_accents,
+            bos_token=bos_token,
+            eos_token=eos_token,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            pad_token=pad_token,
+            cls_token=cls_token,
+            mask_token=mask_token,
+            **kwargs)
+        TibertTokenizerBaseMixin.__init__(self, eor_token=eor_token)
+
+    def tokenize(self, text, **kwargs):
+        if self.stochastic_tokenization:
+            raise NotImplementedError("The fast version of TibertTokenizer does not implement stochastic tokenization. "
+                                      "Use the TibertTokenizerSlow class for this.")
+        return _tokenize_shim(self, super(), text, **kwargs)
+
+
+class TibertTokenizerSlow(TibertTokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin):
+    f"""Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
+    <https://github.com/google/sentencepiece>`.
+    
+    This version of the tokenizer has the slow SentencePiece implementation from Hugging Face as the backend, which
+    itself relies on Google's implementation of SentencePiece. This version supports stochastic tokenization, this is
+    really the only reason to use this class.
+
+    This tokenizer inherits from :class:`~transformers.PreTrainedTokenizer` which contains most of the methods. Users
+    should refer to the superclass for more information regarding methods.
+
+    {TibertTokenizerBaseMixin._args_docstring}
+
+    Attributes:
+        sp_model (:obj:`SentencePieceProcessor`):
+            The `SentencePiece` processor that is used for every conversion (string, tokens and IDs).
+    """
+
+    def __init__(self,
+                 vocab_file,
+                 do_lower_case=True,
+                 remove_space=True,
+                 keep_accents=False,
+                 bos_token='[CLS]',
+                 eos_token='[SEP]',
+                 unk_token='<unk>',
+                 sep_token='[SEP]',
+                 pad_token='<pad>',
+                 cls_token='[CLS]',
+                 mask_token='[MASK]',
+                 eor_token='[eor]',
+                 **kwargs):
+        AlbertTokenizer.__init__(
+            self,
+            vocab_file=vocab_file,
+            do_lower_case=do_lower_case,
+            remove_space=remove_space,
+            keep_accents=keep_accents,
+            bos_token=bos_token,
+            eos_token=eos_token,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            pad_token=pad_token,
+            cls_token=cls_token,
+            mask_token=mask_token,
+            **kwargs)
+        TibertTokenizerBaseMixin.__init__(self, eor_token=eor_token)
+
     def _tokenize(self, text):
         # A copy of the _tokenize function from the original but with nbest and alpha exposed.
         if self._print_tokenizer:
@@ -212,55 +333,10 @@ class TibertTokenizer(AlbertTokenizer, CAITokenizerMixin):
         return new_pieces
 
     def tokenize(self, text, **kwargs):
-        # The AlBERT tokenizer deliberately splits on the control tokens in the text to introduce white space between
-        #   them. So [MASK]de dmar ro/ becomes ['[MASK]', '_de', 'dmar', 'ra', 'o', '/']. This doesn't work for
-        #   Tibetan, we want it to be ['_', '[MASK]', 'de', 'dmar', 'ra', 'o', '/'] otherwise we have a huge mismatch
-        #   between the training and test. So we replace the control tokens with non-Tibetan special text, tokenize as
-        #   per AlBERT, then replace the special text with the control tokens back. Everything then flows correctly
-        #   through the rest of the AlBERT tokenizer.
-        #
-        # We also introduce the option to only add the underline between sections. This can improve performance on
-        #   unmasking short sentences. Likely this is happening because of a mismatch between the training and test
-        #   data, which means the short sentence part of the BERT pre-training data generator is actually important.
-        #   In Tibetan there is no obvious way to do this without a sentence segmentation model, so we leave this as is
-        #   until we are able to make a reliable sentence segmenter as part of the part-of-speech tagging experiments.
-        #   When we have a reliable segmenter we can augment the training set with short individual sentences that have
-        #   the proper SentencePiece underscores in front of them and polish the transformer model.
-        if ' ' in text and self.underline_between_sections:
-            sections = [self.tokenize(section, **kwargs) for section in text.split(' ')]
-            res = []
-            for section in sections + [[]]:
-                if len(section) > 0:
-                    res.extend(section + [SPIECE_UNDERLINE])
-            if len(res) > 0:
-                res = res[:-1]  # Remove the final SentencePiece underline
-            return res
-        if self.tsheg_pretokenization:
-            for mark in self.intersyllabic_marks:
-                # Break up the intersyllabic marks with a non-Tibetan token. This will force SentencePiece's BPE to
-                #   not join across the out-of-vocabulary token.
-                text = text.replace(mark, mark + 'a')
-        special_token_map = dict(
-            [(str(idx), control_token) for idx, control_token in enumerate(list(self.unique_no_split_tokens))])
-        for replacement, control_token in special_token_map.items():
-            text = text.replace(control_token, replacement)
-        res = [
-            special_token_map[token] if token in special_token_map else token
-            for token in super().tokenize(text, **kwargs)]
-        if self.underline_between_sections:
-            final_res = []
-            for token in res:
-                if token == SPIECE_UNDERLINE:
-                    continue
-                if token[0] == SPIECE_UNDERLINE:
-                    token = token[1:]
-                final_res.append(token)
-        else:
-            final_res = res
-        if self.tsheg_pretokenization:
-            # Now remove the non-Tibetan tokens to get a strictly intersyllabic tokenization.
-            final_res = [token for token in final_res if not token == 'a']
-        return final_res
+        return _tokenize_shim(self, super(), text, **kwargs)
+
+
+TibertTokenizer = TibertTokenizerFast
 
 
 if __name__ == "__main__":
