@@ -8,7 +8,7 @@ from transformers import (
     AutoConfig,
     AlbertForTokenClassification)
 
-from ..tokenizer import TibertTokenizer
+from ..tokenizer import CAITokenizer
 from cai_common.models.utils import get_local_ckpt, get_cai_config
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class PartOfSpeechTagger:
         config_name = cai_base_config['hf_base_model_name']
 
         logger.debug(f"Loading tokenizer {tokenizer_name}")
-        self.tokenizer = TibertTokenizer.from_pretrained(TibertTokenizer.get_local_model_dir(tokenizer_name))
+        self.tokenizer = CAITokenizer.from_pretrained(CAITokenizer.get_local_model_dir(tokenizer_name))
         self.tokenizer.stochastic_tokenization = False
         self.tokenizer.tsheg_pretokenization = True
 

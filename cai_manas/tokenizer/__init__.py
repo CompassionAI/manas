@@ -1,5 +1,5 @@
-from .tokenizer import TibertTokenizer
+from .tokenizer import CAITokenizer
 
 __all__ = [
-    "TibertTokenizer"
+    "CAITokenizer"
 ]

@@ -84,7 +84,7 @@ def _tokenize_shim(self, super, text, **kwargs):
     return final_res
 
 
-class TibertTokenizerBaseMixin:
+class CAITokenizerBaseMixin:
     _args_docstring = """
     Args:
         vocab_file (:obj:`string`):
@@ -205,7 +205,7 @@ class TibertTokenizerBaseMixin:
             user_defined_symbols="(,),\",-,.,–,£,€")
 
 
-class TibertTokenizerFast(TibertTokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerMixin):
+class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerMixin):
     f"""Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
     <https://github.com/google/sentencepiece>`.
     
@@ -215,7 +215,7 @@ class TibertTokenizerFast(TibertTokenizerBaseMixin, AlbertTokenizerFast, CAIToke
     This tokenizer inherits from :class:`~transformers.PreTrainedTokenizerFast` which contains most of the methods.
     Users should refer to the superclass for more information regarding methods.
 
-    {TibertTokenizerBaseMixin._args_docstring}
+    {CAITokenizerBaseMixin._args_docstring}
     """
 
     def __init__(self,
@@ -246,16 +246,16 @@ class TibertTokenizerFast(TibertTokenizerBaseMixin, AlbertTokenizerFast, CAIToke
             cls_token=cls_token,
             mask_token=mask_token,
             **kwargs)
-        TibertTokenizerBaseMixin.__init__(self, eor_token=eor_token)
+        CAITokenizerBaseMixin.__init__(self, eor_token=eor_token)
 
     def tokenize(self, text, **kwargs):
         if self.stochastic_tokenization:
-            raise NotImplementedError("The fast version of TibertTokenizer does not implement stochastic tokenization. "
-                                      "Use the TibertTokenizerSlow class for this.")
+            raise NotImplementedError("The fast version of CAITokenizer does not implement stochastic tokenization. "
+                                      "Use the CAITokenizerSlow class for this.")
         return _tokenize_shim(self, super(), text, **kwargs)
 
 
-class TibertTokenizerSlow(TibertTokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin):
+class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin):
     f"""Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
     <https://github.com/google/sentencepiece>`.
     
@@ -266,7 +266,7 @@ class TibertTokenizerSlow(TibertTokenizerBaseMixin, AlbertTokenizer, CAITokenize
     This tokenizer inherits from :class:`~transformers.PreTrainedTokenizer` which contains most of the methods. Users
     should refer to the superclass for more information regarding methods.
 
-    {TibertTokenizerBaseMixin._args_docstring}
+    {CAITokenizerBaseMixin._args_docstring}
 
     Attributes:
         sp_model (:obj:`SentencePieceProcessor`):
@@ -301,7 +301,7 @@ class TibertTokenizerSlow(TibertTokenizerBaseMixin, AlbertTokenizer, CAITokenize
             cls_token=cls_token,
             mask_token=mask_token,
             **kwargs)
-        TibertTokenizerBaseMixin.__init__(self, eor_token=eor_token)
+        CAITokenizerBaseMixin.__init__(self, eor_token=eor_token)
 
     def _tokenize(self, text):
         # A copy of the _tokenize function from the original but with nbest and alpha exposed.
@@ -336,26 +336,26 @@ class TibertTokenizerSlow(TibertTokenizerBaseMixin, AlbertTokenizer, CAITokenize
         return _tokenize_shim(self, super(), text, **kwargs)
 
 
-TibertTokenizer = TibertTokenizerFast
+CAITokenizer = CAITokenizerFast
 
 
 if __name__ == "__main__":
     training_data = os.path.join(DATA_BASE_PATH, "processed_datasets/dictionary-tokenizer-training/spm_train.txt")
     spm_tokenizers = os.path.join(DATA_BASE_PATH, "champion_models/tokenizer-olive")
 
-    TibertTokenizer.train(
+    CAITokenizer.train(
         training_data,
         os.path.join(spm_tokenizers, 'olive_tiny'),
         model_type='bpe',
         vocab_size=1000)
 
-    TibertTokenizer.train(
+    CAITokenizer.train(
         training_data,
         os.path.join(spm_tokenizers, 'olive_small'),
         model_type='bpe',
         vocab_size=5000)
 
-    TibertTokenizer.train(
+    CAITokenizer.train(
         training_data,
         os.path.join(spm_tokenizers, 'olive_big'),
         model_type='bpe',

@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import random_split
 from sklearn.metrics import precision_recall_fscore_support
 
-from ..tokenizer import TibertTokenizer
+from ..tokenizer import CAITokenizer
 from cai_common.models.utils import get_local_ckpt
 from cai_common.datasets import TokenTagDataset
 from cai_common.utils.hydra_training_args import HydraTrainingArguments
@@ -71,8 +71,8 @@ def main(cfg):
     set_seed(training_cfg.seed)
 
     logger.info(f"Creating tokenizer: {cfg.model.tokenizer_name}")
-    logger.debug(f"Tokenizer location: {TibertTokenizer.get_local_model_dir(cfg.model.tokenizer_name)}")
-    tibert_tkn = TibertTokenizer.from_pretrained(TibertTokenizer.get_local_model_dir(cfg.model.tokenizer_name))
+    logger.debug(f"Tokenizer location: {CAITokenizer.get_local_model_dir(cfg.model.tokenizer_name)}")
+    tibert_tkn = CAITokenizer.from_pretrained(CAITokenizer.get_local_model_dir(cfg.model.tokenizer_name))
     tibert_tkn.stochastic_tokenization = False
     tibert_tkn.tsheg_pretokenization = True
     logger.debug(f"Tokenizer vocabulary size: {tibert_tkn.vocab_size}")
