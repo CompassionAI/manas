@@ -1,8 +1,9 @@
 import os
 import glob
 import unicodedata
-from transformers import AlbertTokenizer, AlbertTokenizerFast
 import sentencepiece as spm
+
+from transformers import AlbertTokenizer, AlbertTokenizerFast
 
 from .cai_tokenizer_mixin import CAITokenizerMixin
 
@@ -32,7 +33,7 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
 SPIECE_UNDERLINE = "▁"
 
 
-def _tokenize_shim(self, super, text, **kwargs):
+def _tokenize_shim(self, super, text, **kwargs):    # pylint: disable=redefined-builtin
     # The AlBERT tokenizer deliberately splits on the control tokens in the text to introduce white space between
     #   them. So [MASK]de dmar ro/ becomes ['[MASK]', '_de', 'dmar', 'ra', 'o', '/']. This doesn't work for
     #   Tibetan, we want it to be ['_', '[MASK]', 'de', 'dmar', 'ra', 'o', '/'] otherwise we have a huge mismatch
@@ -82,6 +83,14 @@ def _tokenize_shim(self, super, text, **kwargs):
         # Now remove the non-Tibetan tokens to get a strictly intersyllabic tokenization.
         final_res = [token for token in final_res if not token == 'a']
     return final_res
+
+
+def concat_docstrings(*docstr):
+    def docstring_decorator(fn):
+        fn.__doc__ = "".join(docstr) + (fn.__doc__ if fn.__doc__ is not None else "")
+        return fn
+
+    return docstring_decorator
 
 
 class CAITokenizerBaseMixin:
@@ -191,7 +200,7 @@ class CAITokenizerBaseMixin:
         """
 
         # Settings are from https://github.com/google-research/albert/blob/master/README.md
-        spm.SentencePieceTrainer.train(
+        spm.SentencePieceTrainer.Train(
             input=glob.glob(training_data_glob),
             model_prefix=model_file,
             model_type=model_type,
@@ -205,19 +214,20 @@ class CAITokenizerBaseMixin:
             user_defined_symbols="(,),\",-,.,–,£,€")
 
 
-class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerMixin):
-    f"""Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
+@concat_docstrings(
+    """Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
     <https://github.com/google/sentencepiece>`.
-    
+
     This version of the tokenizer has the fast SentencePiece implementation from Hugging Face as the backend. It does
     not support stochastic tokenization.
 
     This tokenizer inherits from :class:`~transformers.PreTrainedTokenizerFast` which contains most of the methods.
     Users should refer to the superclass for more information regarding methods.
 
-    {CAITokenizerBaseMixin._args_docstring}
-    """
-
+    """,
+    CAITokenizerBaseMixin._args_docstring
+)
+class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerMixin):
     def __init__(self,
                  vocab_file,
                  do_lower_case=True,
@@ -255,10 +265,10 @@ class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerM
         return _tokenize_shim(self, super(), text, **kwargs)
 
 
-class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin):
-    f"""Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
+@concat_docstrings(
+    """Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
     <https://github.com/google/sentencepiece>`.
-    
+
     This version of the tokenizer has the slow SentencePiece implementation from Hugging Face as the backend, which
     itself relies on Google's implementation of SentencePiece. This version supports stochastic tokenization, this is
     really the only reason to use this class.
@@ -266,13 +276,15 @@ class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin
     This tokenizer inherits from :class:`~transformers.PreTrainedTokenizer` which contains most of the methods. Users
     should refer to the superclass for more information regarding methods.
 
-    {CAITokenizerBaseMixin._args_docstring}
-
+    """,
+    CAITokenizerBaseMixin._args_docstring,
+    """
     Attributes:
         sp_model (:obj:`SentencePieceProcessor`):
             The `SentencePiece` processor that is used for every conversion (string, tokens and IDs).
     """
-
+)
+class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin):
     def __init__(self,
                  vocab_file,
                  do_lower_case=True,
@@ -306,7 +318,7 @@ class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin
     def _tokenize(self, text):
         # A copy of the _tokenize function from the original but with nbest and alpha exposed.
         if self._print_tokenizer:
-            print("Tokenizing {} with sample={}".format(text, self.stochastic_tokenization))
+            print(f"Tokenizing {text} with sample={self.stochastic_tokenization}")
         text = self.preprocess_text(text)
 
         if self.stochastic_tokenization:
