@@ -8,7 +8,7 @@ class CAITokenizerMixin:
         Args:
             model_name (:obj:`string`):
                 The Transformers model name.
-        
+
         Returns:
             The local directory name you can feed to AutoTokenizer.from_pretrained.
         """
