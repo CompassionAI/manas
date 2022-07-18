@@ -12,7 +12,6 @@ import torch
 from torch.utils.data import random_split
 from sklearn.metrics import precision_recall_fscore_support
 
-from ..tokenizer import CAITokenizer
 from cai_common.models.utils import get_local_ckpt
 from cai_common.datasets import TokenTagDataset
 from cai_common.utils.hydra_training_args import HydraTrainingArguments
@@ -20,6 +19,7 @@ from cai_common.utils.hydra_training_args import HydraTrainingArguments
 import transformers
 from transformers import (AutoConfig, AlbertForTokenClassification, Trainer, set_seed)
 
+from ..tokenizer import CAITokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def align_predictions_1d(predictions, label_ids):
 
 def compute_metrics(p):
     preds_list, out_label_list = align_predictions_1d(p.predictions, p.label_ids)
-    precision, recall, fscore, support = precision_recall_fscore_support(preds_list, out_label_list, average='weighted')
+    precision, recall, fscore, _ = precision_recall_fscore_support(preds_list, out_label_list, average='weighted')
     return {
         "precision": precision,
         "recall": recall,
@@ -144,4 +144,4 @@ def main(cfg):
 
 
 if __name__ == "__main__":
-    main()
+    main()      # pylint: disable=no-value-for-parameter

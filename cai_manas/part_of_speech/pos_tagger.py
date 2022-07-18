@@ -4,12 +4,12 @@ import logging
 from typing import Tuple, Dict, List
 
 import numpy as np
+from cai_common.models.utils import get_local_ckpt, get_cai_config
 from transformers import (
     AutoConfig,
     AlbertForTokenClassification)
 
 from ..tokenizer import CAITokenizer
-from cai_common.models.utils import get_local_ckpt, get_cai_config
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,12 @@ class PartOfSpeechTagger:
         local_ckpt = get_local_ckpt(model_ckpt)
         logger.debug(f"Local model checkpoint {model_ckpt} resolved to {local_ckpt}")
 
-        logger.debug(f"Loading CAI PoS model config")
+        logger.debug("Loading CAI PoS model config")
         cai_pos_config = get_cai_config(model_ckpt)
         base_model = cai_pos_config['base_model']
         logger.debug(f"Base model resolved to {base_model}")
 
-        logger.debug(f"Loading CAI base model config")
+        logger.debug("Loading CAI base model config")
         cai_base_config = get_cai_config(base_model)
         tokenizer_name = cai_base_config['tokenizer_name']
         config_name = cai_base_config['hf_base_model_name']
@@ -51,25 +51,25 @@ class PartOfSpeechTagger:
         self.tokenizer.stochastic_tokenization = False
         self.tokenizer.tsheg_pretokenization = True
 
-        logger.debug(f"Loading model config.json")
+        logger.debug("Loading model config.json")
         config_json_fn = os.path.join(os.path.dirname(local_ckpt), "config.json")
         with open(config_json_fn, 'r') as f:
             config_json = json.load(f)
-        logger.debug(f"Extracting label2id maps")
+        logger.debug("Extracting label2id maps")
         self.id_to_label_map = {
             int(id): label
             for id, label in config_json["id2label"].items()}
 
-        logger.debug(f"Loading Huggingface model config")
+        logger.debug("Loading Huggingface model config")
         self.model_cfg = AutoConfig.from_pretrained(
             config_name,
             vocab_size=self.tokenizer.vocab_size,
             num_labels=len(self.id_to_label_map),
             id2label=self.id_to_label_map)
 
-        logger.debug(f"Loading model")
+        logger.debug("Loading model")
         self.model = AlbertForTokenClassification.from_pretrained(local_ckpt, config=self.model_cfg)
-        logger.debug(f"Configuring model")
+        logger.debug("Configuring model")
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.model.eval()
 
@@ -78,7 +78,7 @@ class PartOfSpeechTagger:
 
         Args:
             bo_text: The Tibetan text to tag, as a unicode string.
-        
+
         Returns:
             A tuple of (tokens, predicted tag IDs) where both elements are numpy arrays.
         """
@@ -93,7 +93,7 @@ class PartOfSpeechTagger:
 
         Args:
             bo_text: The Tibetan text to tag, as a unicode string.
-        
+
         Returns:
             A dictionary with two keys: words and tags. The words are a list of the segmented decoded Tibetan words, in
             unicode text. The tags are the predicted tags for each word.
