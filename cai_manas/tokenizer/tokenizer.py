@@ -172,12 +172,13 @@ class CAITokenizerBaseMixin:
     tsheg_pretokenization = False
     underline_between_sections = False
 
-    def __init__(self, eor_token='[eor]'):
+    def __init__(self):
+        self.keep_accents = True
+
+    def enable_siamese(self, eor_token='[eor]'):
         self.eor_token = eor_token
         self.add_tokens(eor_token)
         self.eor_token_id = self.convert_tokens_to_ids(eor_token)
-        self.keep_accents = True
-
 
     @staticmethod
     def train(training_data_glob,
@@ -240,7 +241,6 @@ class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerM
                  pad_token='<pad>',
                  cls_token='[CLS]',
                  mask_token='[MASK]',
-                 eor_token='[eor]',
                  **kwargs):
         AlbertTokenizerFast.__init__(
             self,
@@ -256,7 +256,7 @@ class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerM
             cls_token=cls_token,
             mask_token=mask_token,
             **kwargs)
-        CAITokenizerBaseMixin.__init__(self, eor_token=eor_token)
+        CAITokenizerBaseMixin.__init__(self)
 
     def tokenize(self, text, **kwargs):
         if self.stochastic_tokenization:
@@ -297,7 +297,6 @@ class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin
                  pad_token='<pad>',
                  cls_token='[CLS]',
                  mask_token='[MASK]',
-                 eor_token='[eor]',
                  **kwargs):
         AlbertTokenizer.__init__(
             self,
@@ -313,7 +312,7 @@ class CAITokenizerSlow(CAITokenizerBaseMixin, AlbertTokenizer, CAITokenizerMixin
             cls_token=cls_token,
             mask_token=mask_token,
             **kwargs)
-        CAITokenizerBaseMixin.__init__(self, eor_token=eor_token)
+        CAITokenizerBaseMixin.__init__(self)
 
     def _tokenize(self, text):
         # A copy of the _tokenize function from the original but with nbest and alpha exposed.
