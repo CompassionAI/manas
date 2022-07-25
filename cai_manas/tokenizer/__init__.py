@@ -1,5 +1,7 @@
-from .tokenizer import CAITokenizer
+from .tokenizer import CAITokenizer, CAITokenizerSlow, CAITokenizerFast
 
 __all__ = [
-    "CAITokenizer"
+    "CAITokenizer",
+    "CAITokenizerSlow",
+    "CAITokenizerFast",
 ]
