@@ -2,6 +2,7 @@ import os
 import sys
 import pickle
 import logging
+from cai_manas.tokenizer.tokenizer import CAITokenizer
 from tqdm import tqdm
 
 import hydra
@@ -17,9 +18,16 @@ from cai_common.datasets import TokenTagDataset
 from cai_common.utils.hydra_training_args import HydraTrainingArguments
 
 import transformers
-from transformers import (AutoConfig, AlbertForTokenClassification, Trainer, set_seed)
+from transformers import (
+    AutoConfig,
+    AlbertForTokenClassification,
+    DataCollatorForTokenClassification,
+    Trainer,
+    set_seed
+)
+from ..tokenizer import CAITokenizerSlow
 
-from ..tokenizer import CAITokenizer
+CAITokenizer = CAITokenizerSlow
 
 logger = logging.getLogger(__name__)
 
@@ -72,18 +80,19 @@ def main(cfg):
 
     logger.info(f"Creating tokenizer: {cfg.model.tokenizer_name}")
     logger.debug(f"Tokenizer location: {CAITokenizer.get_local_model_dir(cfg.model.tokenizer_name)}")
-    tibert_tkn = CAITokenizer.from_pretrained(CAITokenizer.get_local_model_dir(cfg.model.tokenizer_name))
-    tibert_tkn.stochastic_tokenization = False
-    tibert_tkn.tsheg_pretokenization = True
-    logger.debug(f"Tokenizer vocabulary size: {tibert_tkn.vocab_size}")
+    tokenizer = CAITokenizer.from_pretrained(CAITokenizer.get_local_model_dir(cfg.model.tokenizer_name))
+    tokenizer.stochastic_tokenization = False
+    tokenizer.tsheg_pretokenization = cfg.data.tsheg_pretokenization
+    logger.debug(f"Tokenizer vocabulary size: {tokenizer.vocab_size}")
 
     logger.info("Loading datasets")
+    TokenTagDataset.concatenate_examples = cfg.data.concatenate_examples
     TokenTagDataset.use_mask_for_word_pieces = cfg.data.use_mask_for_word_pieces
     TokenTagDataset.dupe_count, TokenTagDataset.dupe_offset = cfg.data.dupe_count, cfg.data.dupe_offset
     if cfg.data.train_dataset_name is None:
         raise ValueError("Must pass in a training dataset name in --train_dataset_name")
     dataset = TokenTagDataset(
-        tokenizer=tibert_tkn,
+        tokenizer=tokenizer,
         processed_dataset=cfg.data.train_dataset_name,
         verbose=True,
         tqdm=tqdm)
@@ -103,7 +112,7 @@ def main(cfg):
         logger.debug("Withheld test data")
         train_data = dataset
         test_data = TokenTagDataset(
-            tibert_tkn,
+            tokenizer,
             processed_dataset=cfg.data.test_dataset_name,
             verbose=True,
             tqdm=tqdm)
@@ -124,7 +133,7 @@ def main(cfg):
     tibert_mdl = AlbertForTokenClassification.from_pretrained(
         local_ckpt,
         config=albert_cfg)
-    tibert_mdl.resize_token_embeddings(len(tibert_tkn))
+    tibert_mdl.resize_token_embeddings(len(tokenizer))
 
     logger.info("Kicking off training!")
     trainer = Trainer(
@@ -132,7 +141,9 @@ def main(cfg):
         args=training_cfg,
         train_dataset=train_data,
         eval_dataset=test_data,
-        compute_metrics=compute_metrics)
+        data_collator=DataCollatorForTokenClassification(tokenizer=tokenizer),
+        compute_metrics=compute_metrics
+    )
     trainer.train()
 
     logger.info("Saving results")

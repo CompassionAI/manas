@@ -1,7 +1,9 @@
 defaults:
-  - data: part-of-speech-intrasyllabic-olive
-  - model: albert-olive-cormorant/base
+  - data: part-of-speech-olive
+  - model: albert-olive-cormorant
   - training: frequent_logs
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
   - _self_
 
 hydra:

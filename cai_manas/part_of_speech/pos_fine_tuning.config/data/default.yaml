@@ -21,3 +21,9 @@ max_seq_length: 128
 
 # What fraction of the data to put into the test dataset.
 test_frac: 0.1
+
+# Pre-tokenize by splitting on the intersyllabic dot (tsheg) first.
+tsheg_pretokenization: False
+
+# Concatenate examples together to form long sentences
+concatenate_examples: False
