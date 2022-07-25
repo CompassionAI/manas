@@ -3,6 +3,7 @@ import json
 import logging
 from typing import Tuple, Dict, List
 
+import torch
 import numpy as np
 from cai_common.models.utils import get_local_ckpt, get_cai_config
 from transformers import (
@@ -72,6 +73,29 @@ class PartOfSpeechTagger:
         logger.debug("Configuring model")
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.model.eval()
+
+    def predict_tokens(self, bo_tokens: List[int]) -> Tuple[np.ndarray, np.ndarray]:
+        # pylint: disable=no-member
+        """Run the prediction of the part-of-speech tags on the list of tokens. Returns the tag IDs.
+
+        Args:
+            bo_tokens: List of Tibetan tokens to tag. *NOT* a PyTorch tensor.
+
+        Returns:
+            Predicted tag IDs as a numpy array.
+        """
+
+        if not bo_tokens[0] == self.tokenizer.bos_token_id:
+            bo_tokens = [self.tokenizer.bos_token_id] + bo_tokens
+        if not bo_tokens[-1] == self.tokenizer.eos_token_id:
+            bo_tokens = bo_tokens + [self.tokenizer.eos_token_id]
+        bo_tokens = torch.LongTensor([bo_tokens])
+        tokens = {
+            'input_ids': bo_tokens,
+            'attention_mask': torch.ones_like(bo_tokens)
+        }
+        mdl_res = self.model(**tokens)[0][0]
+        return np.argmax(mdl_res.detach().numpy(), axis=1)
 
     def predict_tags(self, bo_text: str) -> Tuple[np.ndarray, np.ndarray]:
         """Run the core prediction of the part-of-speech tags. Returns the numerical tokens and tag IDs.
