@@ -12,3 +12,6 @@ save_steps: 50
 save_total_limit: 50
 log_level: debug
 evaluation_strategy: STEPS
+
+metric_for_best_model: f1
+greater_is_better: true
