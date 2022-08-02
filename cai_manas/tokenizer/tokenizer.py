@@ -258,6 +258,15 @@ class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerM
             **kwargs)
         CAITokenizerBaseMixin.__init__(self)
 
+    @classmethod
+    def _from_pretrained(
+        cls,
+        *args,
+        **kwargs
+    ):
+        kwargs["keep_accents"] = True
+        return AlbertTokenizerFast._from_pretrained(*args, **kwargs)
+
     def tokenize(self, text, **kwargs):
         if self.stochastic_tokenization:
             raise NotImplementedError("The fast version of CAITokenizer does not implement stochastic tokenization. "
