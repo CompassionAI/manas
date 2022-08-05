@@ -1,0 +1,8 @@
+# Pretrained PyTorch checkpoint, converted to Huggingface
+tibert_pytorch_ckpt: albert-olive-cormorant/base-intermediate
+
+# Huggingface config name for the pretrained checkpoint
+config_name: albert-base-v2
+
+# Name of the tokenizer file to load, under champion_models in the data registry
+tokenizer_name: olive-large
