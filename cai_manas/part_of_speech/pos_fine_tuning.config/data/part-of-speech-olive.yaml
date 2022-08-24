@@ -2,4 +2,4 @@ defaults:
  - default
 
 # See default config for documentation
-train_dataset_name: part-of-speech-olive
+train_dataset_name: processed_datasets/part-of-speech-olive
