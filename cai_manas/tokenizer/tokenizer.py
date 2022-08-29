@@ -233,7 +233,7 @@ class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerM
                  vocab_file,
                  do_lower_case=True,
                  remove_space=True,
-                 keep_accents=False,
+                 keep_accents=True,
                  bos_token='[CLS]',
                  eos_token='[SEP]',
                  unk_token='<unk>',
@@ -264,6 +264,10 @@ class CAITokenizerFast(CAITokenizerBaseMixin, AlbertTokenizerFast, CAITokenizerM
                                       "Use the CAITokenizerSlow class for this.")
         return _tokenize_shim(self, super(), text, **kwargs)
 
+    @classmethod
+    def from_pretrained(cls, pretrained_model_name_or_path, *init_inputs, **kwargs):
+        kwargs.setdefault("keep_accents", True)
+        return super().from_pretrained(pretrained_model_name_or_path, *init_inputs, **kwargs)
 
 @concat_docstrings(
     """Constructs the Tibert tokenizer. Very similar to the ALBERT tokenizer. Based on `SentencePiece
