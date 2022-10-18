@@ -4,11 +4,12 @@ import unicodedata
 import sentencepiece as spm
 
 from transformers import AlbertTokenizer, AlbertTokenizerFast
+from cai_common.defaults import cai_s3
 
 from .cai_tokenizer_mixin import CAITokenizerMixin
 
 
-DATA_BASE_PATH = os.environ['CAI_DATA_BASE_PATH']
+DATA_BASE_PATH = os.environ.get('CAI_DATA_BASE_PATH', cai_s3)
 
 VOCAB_FILES_NAMES = {"vocab_file": "spm_model.model"}
 
