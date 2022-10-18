@@ -1,6 +1,6 @@
 import os
 
-from cai_common.models.utils import load_from_s3
+from cai_common.models.utils import get_local_model_dir
 
 class CAITokenizerMixin:
     @classmethod
@@ -24,6 +24,6 @@ class CAITokenizerMixin:
         dir_name = os.path.dirname(cls.pretrained_vocab_files_map['vocab_file'][model_name])
 
         if download_if_missing and dir_name.startswith("https://"):
-            dir_name = load_from_s3(model_name, dir_name)
+            dir_name = get_local_model_dir(dir_name)
         
         return dir_name
