@@ -29,7 +29,7 @@ conda activate my-env
 Just install with pip:
 
 ```bash
-pip install compassionai-common
+pip install compassionai-manas
 ```
 
 ### Research
