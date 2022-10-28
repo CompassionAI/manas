@@ -22,8 +22,5 @@ class CAITokenizerMixin:
             valid_names = ', '.join(cls.pretrained_vocab_files_map['vocab_file'].keys())
             raise KeyError(f"Unknown tokenizer model name {model_name}. Valid names are: {valid_names}")
         dir_name = os.path.dirname(cls.pretrained_vocab_files_map['vocab_file'][model_name])
-
-        if download_if_missing and dir_name.startswith("https://"):
-            dir_name = get_local_model_dir(dir_name)
-        
+        dir_name = get_local_model_dir(dir_name)
         return dir_name
