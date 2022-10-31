@@ -35,42 +35,42 @@ class PartOfSpeechTagger:
         """
 
         local_ckpt = get_local_ckpt(model_ckpt)
-        logger.debug(f"Local model checkpoint {model_ckpt} resolved to {local_ckpt}")
+        logger.info(f"Local model checkpoint {model_ckpt} resolved to {local_ckpt}")
 
-        logger.debug("Loading CAI PoS model config")
+        logger.info("Loading CAI PoS model config")
         cai_pos_config = get_cai_config(model_ckpt)
         base_model = cai_pos_config['base_model']
-        logger.debug(f"Base model resolved to {base_model}")
+        logger.info(f"Base model resolved to {base_model}")
 
-        logger.debug("Loading CAI base model config")
+        logger.info("Loading CAI base model config")
         cai_base_config = get_cai_config(base_model)
         tokenizer_name = cai_base_config['tokenizer_name']
         config_name = cai_base_config['hf_base_model_name']
 
-        logger.debug(f"Loading tokenizer {tokenizer_name}")
+        logger.info(f"Loading tokenizer {tokenizer_name}")
         self.tokenizer = CAITokenizer.from_pretrained(CAITokenizer.get_local_model_dir(tokenizer_name))
         self.tokenizer.stochastic_tokenization = False
         self.tokenizer.tsheg_pretokenization = True
 
-        logger.debug("Loading model config.json")
+        logger.debug("  Loading model config.json")
         config_json_fn = os.path.join(os.path.dirname(local_ckpt), "config.json")
         with open(config_json_fn, 'r') as f:
             config_json = json.load(f)
-        logger.debug("Extracting label2id maps")
+        logger.debug("  Extracting label2id maps")
         self.id_to_label_map = {
             int(id): label
             for id, label in config_json["id2label"].items()}
 
-        logger.debug("Loading Huggingface model config")
+        logger.info("Loading model")
+        logger.debug("  Loading Huggingface model config")
         self.model_cfg = AutoConfig.from_pretrained(
             config_name,
             vocab_size=self.tokenizer.vocab_size,
             num_labels=len(self.id_to_label_map),
             id2label=self.id_to_label_map)
 
-        logger.debug("Loading model")
         self.model = AlbertForTokenClassification.from_pretrained(local_ckpt, config=self.model_cfg)
-        logger.debug("Configuring model")
+        logger.debug("  Configuring model")
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.model.eval()
 
