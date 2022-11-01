@@ -75,6 +75,16 @@ class PartOfSpeechTagger:
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.model.eval()
 
+        self._cuda = False
+
+    def cuda(self) -> None:
+        self._cuda = True
+        self.model.cuda()
+
+    def cpu(self) -> None:
+        self._cuda = False
+        self.model.cpu()
+
     def predict_tokens(self, bo_tokens: List[int]) -> Tuple[np.ndarray, np.ndarray]:
         # pylint: disable=no-member
         """Run the prediction of the part-of-speech tags on the list of tokens. Returns the tag IDs.
@@ -92,10 +102,10 @@ class PartOfSpeechTagger:
             bo_tokens = bo_tokens + [self.tokenizer.eos_token_id]
         bo_tokens = torch.LongTensor([bo_tokens])
         tokens = {
-            'input_ids': bo_tokens,
-            'attention_mask': torch.ones_like(bo_tokens)
+            'input_ids': bo_tokens.to(self.model.device),
+            'attention_mask': torch.ones_like(bo_tokens).to(self.model.device)
         }
-        mdl_res = self.model(**tokens)[0][0]
+        mdl_res = self.model(**tokens)[0][0].cpu()
         return np.argmax(mdl_res.detach().numpy(), axis=1)
 
     def predict_tags(self, bo_text: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -109,7 +119,8 @@ class PartOfSpeechTagger:
         """
 
         tokens = self.tokenizer(bo_text, return_tensors='pt')
-        mdl_res = self.model(**tokens)[0][0]
+        mdl_res = self.model(**tokens.to(self.model.device))[0][0].cpu()
+        tokens = tokens.to(torch.device("cpu"))
         return tokens['input_ids'][0].numpy(), np.argmax(mdl_res.detach().numpy(), axis=1)
 
     def tag(self, bo_text: str) -> Dict[str, List[str]]:
