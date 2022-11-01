@@ -118,7 +118,8 @@ class PartOfSpeechTagger:
             A tuple of (tokens, predicted tag IDs) where both elements are numpy arrays.
         """
 
-        tokens = self.tokenizer(bo_text, return_tensors='pt')
+        tokens = self.tokenizer(
+            bo_text, return_tensors='pt', truncation=True, max_length=self.model.config.embedding_size)
         mdl_res = self.model(**tokens.to(self.model.device))[0][0].cpu()
         tokens = tokens.to(torch.device("cpu"))
         return tokens['input_ids'][0].numpy(), np.argmax(mdl_res.detach().numpy(), axis=1)
